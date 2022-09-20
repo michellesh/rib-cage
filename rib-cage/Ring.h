@@ -12,6 +12,7 @@ private:
   int _index[MAX_RING_INDEX];
   float _speed;
   float _target;
+  uint8_t _ringType;
   CRGB _color = CRGB::Yellow;
 
 public:
@@ -20,6 +21,7 @@ public:
   static const uint8_t OUTER = 2;
 
   Ring(uint8_t ringType) {
+    _ringType = ringType;
     size_t size = sizeof(RING_INNER[0]) * MAX_RING_INDEX;
     switch (ringType) {
     case INNER:
@@ -50,6 +52,22 @@ public:
   }
 
   float getTarget() { return _target; }
+
+  void setSpeed(int magnitude) {
+    switch (_ringType) {
+    case INNER:
+      _speed = 0.3 * 1.1 * magnitude;
+      break;
+    case MIDDLE:
+      _speed = -0.2 * 1.1 * magnitude;
+      break;
+    case OUTER:
+      _speed = 0.1 * 1.1 * magnitude;
+      break;
+    default:
+      break;
+    }
+  }
 
   void incTarget() {
     _target += _speed;

@@ -62,6 +62,7 @@
 #define PATTERN_SOLID 4
 #define PATTERN_ATOM 5
 #define NUM_PATTERNS 6
+#define NUM_SETTINGS 5
 
 #define STRAND_LENGTH 100
 
@@ -70,6 +71,7 @@ uint8_t barWidth;
 uint8_t pattern;
 uint8_t brightness;
 uint16_t displayTime;
+uint8_t setting = 0;
 int buttonState = 0;
 
 CRGB knobColors[] = {CRGB::Maroon, CRGB::Orchid, CRGB::Turquoise, CRGB::White,
@@ -152,8 +154,15 @@ void loop() {
       int colorIndex = map(value, 4095, 0, 0, numColors - 1);
       knobColor = knobColors[colorIndex];
     }
+
+    value = analogRead(GAIN_PIN);
+    if (pattern == PATTERN_SOUND) {
+      gain = map(value, 4095, 0, 0, 30);
+    } else {
+      setting = map(value, 4095, 0, 0, NUM_SETTINGS);
+    }
+
     brightness = map(analogRead(BRIGHTNESS_PIN), 4095, 0, 0, 255);
-    gain = map(analogRead(GAIN_PIN), 4095, 0, 0, 30);
   }
 
   uint8_t divisor = 1; // If 8 bands, we need to divide things by 2

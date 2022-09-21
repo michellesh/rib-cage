@@ -1,7 +1,5 @@
 /*
- * Web enabled FFT VU meter for a matrix, ESP32 and INMP441 digital mic.
- * The matrix width MUST be either 8 or a multiple of 16 but the height can
- * be any value. E.g. 8x8, 16x16, 8x10, 32x9 etc.
+ * LED fairy lights wrapped arranged in the shape of an atom
  *
  * REQUIRED LIBRARIES
  * FastLED            Arduino libraries manager
@@ -13,7 +11,7 @@
  * GND          GND
  * Vin          5V
  *
- * INMP441
+ * INMP441 Microphone
  * VDD          3V3
  * GND          GND
  * L/R          GND
@@ -21,9 +19,19 @@
  * SCK          D14
  * SD           D32
  *
+ * Button
+ * +            3V3
+ * -            D25 and GND via 470 resistor
+ *
+ * Potentiometers
+ * Knob 1 data  D13
+ * Knob 2 data  D33
+ * Knob 3 data  D27
+ *
  * REFERENCES
- * Main code      Scott Marley            https://www.youtube.com/c/ScottMarley
- * Andrew Tuline et al     https://github.com/atuline/WLED
+ * Sound reactive code/algorithm:
+ * - Scott Marley https://github.com/s-marley/ESP32-INMP441-Matrix-VU
+ * - Andrew Tuline et al https://github.com/atuline/WLED
  */
 
 #include "audio_reactive.h"
@@ -45,11 +53,10 @@
 #define EEPROM_PATTERN 3
 #define EEPROM_DISPLAY_TIME 4
 
-#define BRIGHTNESS_PIN 13
-#define GAIN_PIN 33
-#define SQUELCH_PIN 27
+#define LEFT_KNOB_PIN 13
+#define MIDDLE_KNOB_PIN 33
+#define RIGHT_KNOB_PIN 27
 #define BUTTON_PIN 25
-#define COLOR_PIN 26
 
 #define DEFAULT_BRIGHTNESS 100
 #define DEFAULT_GAIN 30
@@ -72,7 +79,9 @@ uint8_t pattern;
 uint8_t brightness;
 uint16_t displayTime;
 uint8_t setting = 0;
-int buttonState = 0;
+int buttonHold = 0;
+int calibrateMode = 0;
+Timer buttonHoldTimer = {2000};
 
 CRGB knobColors[] = {CRGB::Maroon, CRGB::Orchid, CRGB::Turquoise, CRGB::White,
                      CRGB::FairyLight};
@@ -122,7 +131,7 @@ void setup() {
   brightness = DEFAULT_BRIGHTNESS;
   gain = DEFAULT_GAIN;
   squelch = DEFAULT_SQUELCH;
-  pattern = PATTERN_ATOM;
+  pattern = PATTERN_SOUND;
 
   pinMode(BUTTON_PIN, INPUT);
 }
@@ -138,31 +147,57 @@ void loop() {
 
   // Read button and potentiometers
   EVERY_N_MILLISECONDS(100) {
-    int buttonRead = digitalRead(BUTTON_PIN);
-    if (buttonRead == HIGH && buttonState == 0) {
-      buttonState = 1;
-      pattern = (pattern + 1) % NUM_PATTERNS; // Increment pattern
-    } else if (buttonRead == LOW && buttonState == 1) {
-      buttonState = 0;
+    int buttonRead = digitalRead(BUTTON_PIN); // HIGH when button is held
+    if (buttonRead == HIGH && buttonHold == 0) {
+      buttonHold = 1;
+      buttonHoldTimer.reset();
+    } else if (buttonRead == LOW && buttonHold == 1) {
+      if (!calibrateMode) {
+        pattern = (pattern + 1) % NUM_PATTERNS; // Increment pattern
+      }
+      buttonHold = 0;
+      calibrateMode = 0;
     }
 
-    int value = analogRead(SQUELCH_PIN);
-    if (pattern == PATTERN_SOUND) {
-      squelch = map(value, 4095, 0, 0, 30);
-    } else {
+    if (calibrateMode == 0 && pattern == PATTERN_SOUND && buttonHold &&
+        buttonHoldTimer.complete()) {
+      flashLEDs();
+      calibrateMode = 1;
+    }
+    EVERY_N_SECONDS(1) {
+      Serial.print("calibrateMode: ");
+      Serial.println(calibrateMode);
+    }
+
+    brightness = map(analogRead(LEFT_KNOB_PIN), 4095, 0, 0, 255);
+    int middleKnobValue = analogRead(MIDDLE_KNOB_PIN);
+    int rightKnobValue = analogRead(RIGHT_KNOB_PIN);
+
+    // Microphone settings mode: adjust mic sensitivity and squelch
+    // User enters "microphone settings mode" when button is held down for >2
+    // seconds and the active pattern is the sound reactive pattern
+    if (calibrateMode) {
+      gain = map(middleKnobValue, 4095, 0, 0, 30);
+      squelch = map(rightKnobValue, 4095, 0, 0, 30);
+      EVERY_N_SECONDS(1) {
+        Serial.print("gain: ");
+        Serial.println(gain);
+        Serial.print("squelch: ");
+        Serial.println(squelch);
+      }
+
+    } else { // Regular settings mode
       int numColors = sizeof(knobColors) / sizeof(knobColors[0]);
-      int colorIndex = map(value, 4095, 0, 0, numColors - 1);
+      int colorIndex = map(rightKnobValue, 4095, 0, 0, numColors - 1);
       knobColor = knobColors[colorIndex];
+      setting = map(middleKnobValue, 4095, 0, 0, NUM_SETTINGS - 1);
+      EVERY_N_SECONDS(1) {
+        Serial.print("knobColor index: ");
+        Serial.println(colorIndex);
+        Serial.print("setting: ");
+        Serial.println(setting);
+      }
     }
-
-    value = analogRead(GAIN_PIN);
-    if (pattern == PATTERN_SOUND) {
-      gain = map(value, 4095, 0, 0, 30);
-    } else {
-      setting = map(value, 4095, 0, 0, NUM_SETTINGS);
-    }
-
-    brightness = map(analogRead(BRIGHTNESS_PIN), 4095, 0, 0, 255);
   }
 
   uint8_t divisor = 1; // If 8 bands, we need to divide things by 2
@@ -238,82 +273,28 @@ void drawPatterns() {
   }
 }
 
-//////////// Patterns ////////////
+void flashLEDs() {
+  FastLED.clear();
+  FastLED.show();
+  delay(200);
 
-void rainbowBars(uint8_t band, uint8_t barHeight) {
-  // from the beginning of each segment
-  // int iStart = M_WIDTH * band;
-  // for (int i = iStart; i < iStart + barHeight; i++) {
-  //  leds[i] = CHSV(band * (255 / numBands), 255, 255);
-  //}
-
-  // from the middle of each segment
-  int i = M_WIDTH * band;
-  int half = M_WIDTH / 2;
-  for (int x = 0; x < barHeight / 2; x++) {
-    leds[i + half + x] = CHSV(band * (255 / numBands), 255, 255);
-    leds[i + half - 1 - x] = CHSV(band * (255 / numBands), 255, 255);
+  for (int i = 0; i < STRAND_LENGTH; i++) {
+    leds[i] = CRGB(255, 0, 0).nscale8(50);
   }
-}
+  FastLED.show();
+  delay(200);
 
-void barAverage() {
-  int sum = 0;
-  for (int band = 0; band < numBands; band++) {
-    uint8_t barHeight = barHeights[band];
-    sum += barHeight;
+  FastLED.clear();
+  FastLED.show();
+  delay(200);
+
+  for (int i = 0; i < STRAND_LENGTH; i++) {
+    leds[i] = CRGB(255, 0, 0).nscale8(50);
   }
-  int averageHeight = sum / numBands;
-  int height = map(averageHeight, 0, M_HEIGHT, 0, NUM_LEDS / 4);
+  FastLED.show();
+  delay(200);
 
-  int middle = NUM_LEDS / 2;
-  for (int x = 0; x < height; x++) {
-    leds[x] = CHSV(x * (255 / numBands), 255, 255);
-    leds[middle + x] = CHSV(x * (255 / numBands), 255, 255);
-    leds[middle - 1 - x] = CHSV(x * (255 / numBands), 255, 255);
-    leds[NUM_LEDS - 1 - x] = CHSV(x * (255 / numBands), 255, 255);
-  }
-}
-
-void barSum() {
-  int sum = 0;
-  for (int band = 0; band < numBands; band++) {
-    uint8_t barHeight = barHeights[band];
-    sum += barHeight;
-  }
-  int height = map(sum, 0, NUM_LEDS, 0, NUM_LEDS / 2);
-
-  int middle = NUM_LEDS / 2;
-  for (int x = 0; x < height; x++) {
-    int hue = map(x, 0, NUM_LEDS / 4, 0, 255);
-    leds[x] = CHSV(hue, 255, 255);
-    leds[middle + x] = CHSV(hue, 255, 255);
-    leds[middle - 1 - x] = CHSV(hue, 255, 255);
-    leds[NUM_LEDS - 1 - x] = CHSV(hue, 255, 255);
-  }
-}
-
-void soundReactive() {
-  int numStrands = 4;
-  int offset = 2;
-
-  int sum = 0;
-  for (int band = 0; band < numBands; band++) {
-    uint8_t barHeight = barHeights[band];
-    sum += barHeight;
-  }
-
-  // height gets mapped to full STRAND_LENGTH of 100 instead of 25 (length of
-  // each substrand) as a way of *4 amplifying the mic "sensitivity". I also did
-  // this manually with `* 2` on my bike
-  int height = map(sum, 0, NUM_LEDS, 0, STRAND_LENGTH);
-  for (int s = 0; s < numStrands; s++) {
-    for (int x = 0; x < height; x++) {
-      int index = x + (s * 25) + offset;
-      if (index < STRAND_LENGTH) {
-        int brightness = map(x, 0, STRAND_LENGTH, 0, 255);
-        CRGB color = ColorFromPalette(currentPalette, brightness);
-        leds[index] = color.nscale8(255 - brightness);
-      }
-    }
-  }
+  FastLED.clear();
+  FastLED.show();
+  delay(200);
 }

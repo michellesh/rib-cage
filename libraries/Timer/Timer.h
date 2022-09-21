@@ -1,6 +1,6 @@
 /* Example usage:
 
-Timer myTimer = {cycleTime};
+Timer myTimer = {5000}; // 5 seconds
 if (myTimer.complete()) {
    ...
    myTimer.reset();

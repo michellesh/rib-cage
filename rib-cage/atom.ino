@@ -1,14 +1,15 @@
-float minf(float x, float y) { return x < y ? x : y; }
-
-int width = 5;
-
 void atom() {
   if (setting == 0) {
     atomSolid();
   } else {
-    innerRing.setSpeed(setting);
-    middleRing.setSpeed(setting);
-    outerRing.setSpeed(setting);
+    // Nucleus
+    for (int i = 1; i < 25; i++) {
+      leds[i] = CRGB::Red;
+    }
+
+    innerRing.setSpeed(0.3 * 1.05 * setting);
+    middleRing.setSpeed(-0.2 * 1.05 * setting);
+    outerRing.setSpeed(0.1 * 1.05 * setting);
     atomSpin();
   }
 }
@@ -26,11 +27,6 @@ void atomSolid() {
 }
 
 void atomSpin() {
-  // Nucleus
-  for (int i = 1; i < 25; i++) {
-    leds[i] = CRGB::Red;
-  }
-
   setRing(innerRing);
   setRing(middleRing);
   setRing(outerRing);
@@ -41,7 +37,8 @@ void setRing(Ring &ring) {
     int dist = abs(ring.getTarget() - i);
     dist = minf(dist, abs(ring.getTarget() - 24 - i));
     dist = minf(dist, abs(ring.getTarget() + 24 - i));
-    int brightness = dist > width ? 0 : map(dist, 0, width, 255, 0);
+    int brightness =
+        dist > ring.getWidth() ? 0 : map(dist, 0, ring.getWidth(), 255, 0);
 
     ring.setLED(i, ring.getColor(brightness));
   }

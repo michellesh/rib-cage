@@ -13,9 +13,10 @@ DEFINE_GRADIENT_PALETTE(_tealGreenGold){0,   34,  139, 34, // CRGB::ForestGreen
 CRGBPalette16 tealGreenGold = _tealGreenGold;
 
 DEFINE_GRADIENT_PALETTE(_firePalette){0,   255, 0,   0,  // CRGB::Red
-                                      85,  255, 140, 0,  // CRGB::Orange
-                                      170, 255, 215, 0,  // CRGB::Gold
-                                      255, 0,   0,   0}; // CRGB::Black
+                                      51,  255, 69,  0,  // CRGB::OrangeRed
+                                      102, 255, 140, 0,  // CRGB::Orange
+                                      153, 255, 0,   0,  // CRGB::Red
+                                      255, 255, 0,   0}; // CRGB::Red
 CRGBPalette16 firePalette = _firePalette;
 
 DEFINE_GRADIENT_PALETTE(_icePalette){0,   224, 240, 255, // light blue
@@ -29,13 +30,19 @@ DEFINE_GRADIENT_PALETTE(_fairyPalette){0,   63,  57,  11,   // "QuarterFairy"
                                        255, 255, 255, 255}; // full white
 CRGBPalette16 fairyPalette = _fairyPalette;
 
+DEFINE_GRADIENT_PALETTE(_atomPalette){0,   0,   255, 0,   // CRGB::Green
+                                      85,  255, 255, 0,   // CRGB::Yellow
+                                      170, 0,   0,   255, // CRGB::Blue
+                                      255, 0,   255, 0};  // CRGB::Green
+CRGBPalette16 atomPalette = _atomPalette;
+
 // clang-format off
 CRGBPalette16* activePalettes[] = {
   &redRoseOrchid,
   &tealGreenGold,
   &firePalette,
   &fairyPalette,
-  &icePalette
+  &atomPalette//&icePalette
 };
 // clang-format on
 
@@ -49,6 +56,11 @@ void setNextColorPalette() {
   whichPalette = addmod8(whichPalette, 1, numberOfPalettes);
 
   targetPalette = *(activePalettes[whichPalette]);
+}
+
+void setCurrentColorPalette(uint8_t paletteIndex) {
+  currentPalette = *(activePalettes[paletteIndex]);
+  targetPalette = *(activePalettes[paletteIndex]);
 }
 
 void cycleColorPalette() {

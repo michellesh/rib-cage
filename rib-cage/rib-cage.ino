@@ -70,6 +70,7 @@
 #define PATTERN_ATOM 5
 #define NUM_PATTERNS 6
 #define NUM_SETTINGS 5
+#define NUM_PALETTES 6
 
 #define STRAND_LENGTH 100
 
@@ -79,6 +80,7 @@ uint8_t pattern;
 uint8_t brightness;
 uint16_t displayTime;
 uint8_t setting = 0;
+uint8_t paletteIndex = 0;
 int buttonHold = 0;
 int calibrateMode = 0;
 Timer buttonHoldTimer = {2000};
@@ -137,7 +139,9 @@ void setup() {
 }
 
 void loop() {
-  cycleColorPalette();
+  if (paletteIndex == 0) {
+    cycleColorPalette();
+  }
 
   if (pattern == PATTERN_HEARTBEAT) {
     fadeToBlackBy(leds, STRAND_LENGTH, 10);
@@ -154,6 +158,8 @@ void loop() {
     } else if (buttonRead == LOW && buttonHold == 1) {
       if (!calibrateMode) {
         pattern = (pattern + 1) % NUM_PATTERNS; // Increment pattern
+        Serial.print("pattern: ");
+        Serial.println(pattern);
       }
       buttonHold = 0;
       calibrateMode = 0;
@@ -164,16 +170,18 @@ void loop() {
       flashLEDs();
       calibrateMode = 1;
     }
+
     EVERY_N_SECONDS(1) {
-      Serial.print("calibrateMode: ");
-      Serial.println(calibrateMode);
+      if (calibrateMode) {
+        Serial.print("--CALIBRATE MODE--");
+      }
     }
 
     brightness = map(analogRead(LEFT_KNOB_PIN), 4095, 0, 0, 255);
     int middleKnobValue = analogRead(MIDDLE_KNOB_PIN);
     int rightKnobValue = analogRead(RIGHT_KNOB_PIN);
 
-    // Microphone settings mode: adjust mic sensitivity and squelch
+    // MICROPHONE SETTINGS MODE: adjust mic sensitivity and squelch
     // User enters "microphone settings mode" when button is held down for >2
     // seconds and the active pattern is the sound reactive pattern
     if (calibrateMode) {
@@ -186,18 +194,26 @@ void loop() {
         Serial.println(squelch);
       }
 
-    } else { // Regular settings mode
-      int numColors = sizeof(knobColors) / sizeof(knobColors[0]);
-      int colorIndex = map(rightKnobValue, 4095, 0, 0, numColors - 1);
-      knobColor = knobColors[colorIndex];
+    } else { // REGULAR SETTINGS MODE
       setting = map(middleKnobValue, 4095, 0, 0, NUM_SETTINGS - 1);
+
+      uint8_t numColors = sizeof(knobColors) / sizeof(knobColors[0]);
+      uint8_t knobColorIndex = map(rightKnobValue, 4095, 0, 0, numColors - 1);
+      knobColor = knobColors[knobColorIndex];
+
+      paletteIndex = map(rightKnobValue, 4095, 0, 0, NUM_PALETTES - 1);
+      if (paletteIndex > 0) {
+        setCurrentColorPalette(paletteIndex - 1);
+      }
       EVERY_N_SECONDS(1) {
-        Serial.print("knobColor index: ");
-        Serial.println(colorIndex);
+        Serial.print("knobColorIndex: ");
+        Serial.println(knobColorIndex);
         Serial.print("setting: ");
         Serial.println(setting);
       }
     }
+
+    EVERY_N_SECONDS(1) { Serial.println(); }
   }
 
   uint8_t divisor = 1; // If 8 bands, we need to divide things by 2
@@ -265,10 +281,12 @@ void drawPatterns() {
   case PATTERN_ATOM:
     atom();
     break;
-  default: // PATTERN_SOLID
-    for (int i = 0; i < NUM_LEDS; i++) {
+  case PATTERN_SOLID:
+    for (uint16_t i = 0; i < STRAND_LENGTH; i++) {
       leds[i] = knobColor;
     }
+    break;
+  default:
     break;
   }
 }

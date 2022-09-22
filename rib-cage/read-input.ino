@@ -6,23 +6,18 @@ void readInput() {
   } else if (buttonRead == LOW && buttonHold == 1) {
     if (!calibrateMode) {
       pattern = (pattern + 1) % NUM_PATTERNS; // Increment pattern
-      Serial.print("pattern: ");
-      Serial.println(pattern);
     }
     buttonHold = 0;
     calibrateMode = 0;
   }
 
+  // User enters "calibrate mode" when button is held down for >2
+  // seconds and the active pattern is the sound reactive pattern
+  // Flash all LEDs red twice when user enters calibrate mode
   if (calibrateMode == 0 && pattern == PATTERN_SOUND && buttonHold &&
       buttonHoldTimer.complete()) {
     flashLEDs();
     calibrateMode = 1;
-  }
-
-  EVERY_N_SECONDS(1) {
-    if (calibrateMode) {
-      Serial.print("--CALIBRATE MODE--");
-    }
   }
 
   // Only update brightness if there was a significant change in reading (>10)
@@ -36,18 +31,10 @@ void readInput() {
   int middleKnobValue = analogRead(MIDDLE_KNOB_PIN);
   int rightKnobValue = analogRead(RIGHT_KNOB_PIN);
 
-  // MICROPHONE SETTINGS MODE: adjust mic sensitivity and squelch
-  // User enters "microphone settings mode" when button is held down for >2
-  // seconds and the active pattern is the sound reactive pattern
+  // CALIBRATE MODE: adjust microphone sensitivity (gain) and squelch
   if (calibrateMode) {
     gain = map(middleKnobValue, 4095, 0, 0, 30);
     squelch = map(rightKnobValue, 4095, 0, 0, 30);
-    EVERY_N_SECONDS(1) {
-      Serial.print("gain: ");
-      Serial.println(gain);
-      Serial.print("squelch: ");
-      Serial.println(squelch);
-    }
 
   } else { // REGULAR SETTINGS MODE
     setting = map(middleKnobValue, 4095, 0, 0, NUM_SETTINGS - 1);
@@ -60,13 +47,28 @@ void readInput() {
     if (paletteIndex > 0) {
       setCurrentColorPalette(paletteIndex - 1);
     }
-    EVERY_N_SECONDS(1) {
+  }
+}
+
+void printInputValues() {
+  EVERY_N_MILLISECONDS(500) {
+    Serial.print("pattern: ");
+    Serial.println(pattern);
+    if (calibrateMode) {
+      Serial.print("--CALIBRATE MODE--");
+      Serial.print("gain: ");
+      Serial.println(gain);
+      Serial.print("squelch: ");
+      Serial.println(squelch);
+    } else {
+      int rightKnobValue = analogRead(RIGHT_KNOB_PIN);
+      uint8_t numColors = sizeof(knobColors) / sizeof(knobColors[0]);
+      uint8_t knobColorIndex = map(rightKnobValue, 4095, 0, 0, numColors - 1);
       Serial.print("knobColorIndex: ");
       Serial.println(knobColorIndex);
       Serial.print("setting: ");
       Serial.println(setting);
     }
+    Serial.println();
   }
-
-  EVERY_N_SECONDS(1) { Serial.println(); }
 }

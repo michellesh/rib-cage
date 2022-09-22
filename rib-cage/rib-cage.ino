@@ -74,6 +74,7 @@
 
 #define STRAND_LENGTH 100
 
+unsigned long ticks = 0;
 uint8_t numBands;
 uint8_t barWidth;
 uint8_t pattern;
@@ -133,7 +134,7 @@ void setup() {
   brightness = DEFAULT_BRIGHTNESS;
   gain = DEFAULT_GAIN;
   squelch = DEFAULT_SQUELCH;
-  pattern = PATTERN_ATOM;
+  pattern = PATTERN_HEARTBEAT;
 
   pinMode(BUTTON_PIN, INPUT);
 }
@@ -144,15 +145,15 @@ void loop() {
   }
 
   if (pattern == PATTERN_HEARTBEAT) {
-    fadeToBlackBy(leds, STRAND_LENGTH, 10);
+    fadeToBlackBy(leds, STRAND_LENGTH, 50);
+    //FastLED.clear();
   } else {
     FastLED.clear();
   }
 
   // Read button and potentiometers
-  EVERY_N_MILLISECONDS(10) {
-    readInput();
-  }
+  EVERY_N_MILLISECONDS(10) { readInput(); }
+  //printInputValues();
 
   uint8_t divisor = 1; // If 8 bands, we need to divide things by 2
   if (numBands == 8)

@@ -24,7 +24,6 @@ private:
   float _target;
   uint8_t _ringType;
   int _width = 1;
-  CRGB _color = CRGB::Yellow;
 
 public:
   static const uint8_t INNER = 0;
@@ -38,19 +37,16 @@ public:
     case INNER:
       _target = 0;
       _speed = 0.4;
-      _color = ColorFromPalette(atomPalette, 85);
       memcpy(_index, RING_INNER, size);
       break;
     case MIDDLE:
       _target = 8;
       _speed = -0.3;
-      _color = ColorFromPalette(atomPalette, 170);
       memcpy(_index, RING_MIDDLE, size);
       break;
     case OUTER:
       _target = 16;
       _speed = 0.2;
-      _color = ColorFromPalette(atomPalette, 250);
       memcpy(_index, RING_OUTER, size);
       break;
     default:

@@ -29,12 +29,6 @@ DEFINE_GRADIENT_PALETTE(_fairyPalette){0,   63,  57,  11,   // "QuarterFairy"
                                        255, 255, 255, 255}; // full white
 CRGBPalette16 fairyPalette = _fairyPalette;
 
-DEFINE_GRADIENT_PALETTE(_atomPalette){0,   0,   255, 0,   // CRGB::Green
-                                      85,  255, 255, 0,   // CRGB::Yellow
-                                      170, 0,   0,   255, // CRGB::Blue
-                                      255, 0,   255, 0};  // CRGB::Green
-CRGBPalette16 atomPalette = _atomPalette;
-
 // clang-format off
 CRGBPalette16* activePalettes[] = {
   &redRoseOrchid,
@@ -42,7 +36,6 @@ CRGBPalette16* activePalettes[] = {
   &firePalette,
   &fairyPalette,
   &icePalette
-  //&atomPalette
 };
 // clang-format on
 

@@ -13,10 +13,9 @@ DEFINE_GRADIENT_PALETTE(_tealGreenGold){0,   34,  139, 34, // CRGB::ForestGreen
 CRGBPalette16 tealGreenGold = _tealGreenGold;
 
 DEFINE_GRADIENT_PALETTE(_firePalette){0,   255, 0,   0,  // CRGB::Red
-                                      51,  255, 69,  0,  // CRGB::OrangeRed
-                                      102, 255, 140, 0,  // CRGB::Orange
-                                      153, 255, 0,   0,  // CRGB::Red
-                                      255, 255, 0,   0}; // CRGB::Red
+                                      200, 255, 69,  0,  // CRGB::OrangeRed
+                                      225, 255, 140, 0,  // CRGB::Orange
+                                      255, 255, 215, 0}; // CRGB::Gold
 CRGBPalette16 firePalette = _firePalette;
 
 DEFINE_GRADIENT_PALETTE(_icePalette){0,   224, 240, 255, // light blue
@@ -42,7 +41,8 @@ CRGBPalette16* activePalettes[] = {
   &tealGreenGold,
   &firePalette,
   &fairyPalette,
-  &atomPalette//&icePalette
+  &icePalette
+  //&atomPalette
 };
 // clang-format on
 

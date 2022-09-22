@@ -4,7 +4,7 @@ void atom() {
   } else {
     // Nucleus
     for (int i = 1; i < 25; i++) {
-      leds[i] = CRGB::Red;
+      leds[i] = ColorFromPalette(currentPalette, 0);
     }
 
     innerRing.setSpeed(0.3 * 1.05 * setting);
@@ -17,7 +17,7 @@ void atom() {
 void atomSolid() {
   // Nucleus
   for (int i = 1; i < 25; i++) {
-    leds[i] = CRGB::Red;
+    leds[i] = ColorFromPalette(currentPalette, 0);
   }
   for (int i = 0; i < 24; i++) {
     innerRing.setLED(i, innerRing.getColor(brightness));

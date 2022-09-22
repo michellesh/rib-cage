@@ -133,7 +133,7 @@ void setup() {
   brightness = DEFAULT_BRIGHTNESS;
   gain = DEFAULT_GAIN;
   squelch = DEFAULT_SQUELCH;
-  pattern = PATTERN_SOUND;
+  pattern = PATTERN_ATOM;
 
   pinMode(BUTTON_PIN, INPUT);
 }

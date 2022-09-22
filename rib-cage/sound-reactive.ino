@@ -29,8 +29,9 @@ void barHeightToBrightness() {
 
   // Nucleus
   for (int i = 1; i < 25; i++) {
-    leds[i] = CRGB(255, 0, 0).nscale8(sumNucleus);
+    leds[i] = ColorFromPalette(currentPalette, 0).nscale8(sumNucleus);
   }
+  // Rings
   for (int i = 0; i < 24; i++) {
     innerRing.setLED(i, innerRing.getColor(sumInnerRing));
     middleRing.setLED(i, middleRing.getColor(sumMiddleRing));
@@ -70,9 +71,12 @@ void barHeightToMirrorRing() {
   int sumMiddleRing = mapBarsTo(4, 5, STRAND_LENGTH / 2);
   int sumOuterRing = mapBarsTo(6, 7, STRAND_LENGTH / 2);
 
+  // Nucleus
   for (int i = 1; i < 25; i++) {
-    leds[i] = CRGB(255, 0, 0).nscale8(sumNucleus);
+    leds[i] = ColorFromPalette(currentPalette, 0).nscale8(sumNucleus);
   }
+
+  // Rings
   for (int i = 0; i < min(sumInnerRing, 12); i++) {
     innerRing.setLED(i, innerRing.getColor(map(i, 0, sumInnerRing, 0, 255)));
     innerRing.setLED(23 - i, innerRing.getColor());
@@ -91,9 +95,10 @@ void barHeightToSpeed() {
   // Nucleus
   int sumNucleus = mapBarsTo(0, 1, 255);
   for (int i = 1; i < 25; i++) {
-    leds[i] = CRGB(255, 0, 0).nscale8(sumNucleus);
+    leds[i] = ColorFromPalette(currentPalette, 0).nscale8(sumNucleus);
   }
 
+  // Rings
   int sumInnerRing = mapBarsTo(2, 3, 4);
   int sumMiddleRing = mapBarsTo(4, 5, 4);
   int sumOuterRing = mapBarsTo(6, 7, 4);
@@ -105,10 +110,6 @@ void barHeightToSpeed() {
   atomSpin();
 }
 
-void testRadius() {
-
-}
-
 void barHeightToRadius() {
   int sum = 0;
   for (int band = 0; band < numBands; band++) {
@@ -118,9 +119,11 @@ void barHeightToRadius() {
 
   int radius = map(sum, 0, NUM_LEDS, 0, MAX_RADIUS * 4);
   for (int i = 0; i < 24; i++) {
+    // Nucleus
     if (RADIUS_NUCLEUS[i] <= radius) {
-      leds[i + 1] = CRGB(255, 0, 0); // Nucleus
+      leds[i + 1] = ColorFromPalette(currentPalette, 0);
     }
+    // Rings
     if (innerRing.getRadius(i) <= radius) {
       innerRing.setLED(i, innerRing.getColor());
     }

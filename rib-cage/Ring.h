@@ -59,7 +59,23 @@ public:
   }
 
   CRGB getColor(int brightness = 255) {
-    return CRGB(_color).nscale8(brightness);
+    uint8_t paletteIndex;
+    switch (_ringType) {
+    case INNER:
+      paletteIndex = 80;
+      break;
+    case MIDDLE:
+      paletteIndex = 160;
+      break;
+    case OUTER:
+      paletteIndex = 240;
+      break;
+    default:
+      paletteIndex = 0;
+      break;
+    }
+    CRGB color = ColorFromPalette(currentPalette, paletteIndex);
+    return color.nscale8(brightness);
   }
 
   float getTarget() { return _target; }

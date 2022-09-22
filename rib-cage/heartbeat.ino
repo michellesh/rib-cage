@@ -6,12 +6,13 @@ float sinwave(float minValue, float maxValue, unsigned long waveLength = 50,
 
 void heartbeat() {
   ticks++;
+
+  unsigned long waveLength = map(setting, 0, NUM_SETTINGS - 1, 45, 25);
+  unsigned long waveLengthOffset = (float)waveLength * 0.7;
   static uint8_t firstBeatRadius = -1;
   static uint8_t secondBeatRadius = -1;
-  firstBeatRadius = maxf(0, sinwave(-16, 8, 35));
-  secondBeatRadius = maxf(0, sinwave(-16, 6, 35, 25));
-  Serial.println(firstBeatRadius);
-  Serial.println(secondBeatRadius);
+  firstBeatRadius = maxf(0, sinwave(-16, 8, waveLength));
+  secondBeatRadius = maxf(0, sinwave(-16, 6, waveLength, waveLengthOffset));
 
   for (uint8_t i = 0; i < 24; i++) {
     if (RADIUS_NUCLEUS[i] <= firstBeatRadius ||

@@ -150,70 +150,8 @@ void loop() {
   }
 
   // Read button and potentiometers
-  EVERY_N_MILLISECONDS(100) {
-    int buttonRead = digitalRead(BUTTON_PIN); // HIGH when button is held
-    if (buttonRead == HIGH && buttonHold == 0) {
-      buttonHold = 1;
-      buttonHoldTimer.reset();
-    } else if (buttonRead == LOW && buttonHold == 1) {
-      if (!calibrateMode) {
-        pattern = (pattern + 1) % NUM_PATTERNS; // Increment pattern
-        Serial.print("pattern: ");
-        Serial.println(pattern);
-      }
-      buttonHold = 0;
-      calibrateMode = 0;
-    }
-
-    if (calibrateMode == 0 && pattern == PATTERN_SOUND && buttonHold &&
-        buttonHoldTimer.complete()) {
-      flashLEDs();
-      calibrateMode = 1;
-    }
-
-    EVERY_N_SECONDS(1) {
-      if (calibrateMode) {
-        Serial.print("--CALIBRATE MODE--");
-      }
-    }
-
-    brightness = map(analogRead(LEFT_KNOB_PIN), 4095, 0, 0, 255);
-    int middleKnobValue = analogRead(MIDDLE_KNOB_PIN);
-    int rightKnobValue = analogRead(RIGHT_KNOB_PIN);
-
-    // MICROPHONE SETTINGS MODE: adjust mic sensitivity and squelch
-    // User enters "microphone settings mode" when button is held down for >2
-    // seconds and the active pattern is the sound reactive pattern
-    if (calibrateMode) {
-      gain = map(middleKnobValue, 4095, 0, 0, 30);
-      squelch = map(rightKnobValue, 4095, 0, 0, 30);
-      EVERY_N_SECONDS(1) {
-        Serial.print("gain: ");
-        Serial.println(gain);
-        Serial.print("squelch: ");
-        Serial.println(squelch);
-      }
-
-    } else { // REGULAR SETTINGS MODE
-      setting = map(middleKnobValue, 4095, 0, 0, NUM_SETTINGS - 1);
-
-      uint8_t numColors = sizeof(knobColors) / sizeof(knobColors[0]);
-      uint8_t knobColorIndex = map(rightKnobValue, 4095, 0, 0, numColors - 1);
-      knobColor = knobColors[knobColorIndex];
-
-      paletteIndex = map(rightKnobValue, 4095, 0, 0, NUM_PALETTES - 1);
-      if (paletteIndex > 0) {
-        setCurrentColorPalette(paletteIndex - 1);
-      }
-      EVERY_N_SECONDS(1) {
-        Serial.print("knobColorIndex: ");
-        Serial.println(knobColorIndex);
-        Serial.print("setting: ");
-        Serial.println(setting);
-      }
-    }
-
-    EVERY_N_SECONDS(1) { Serial.println(); }
+  EVERY_N_MILLISECONDS(10) {
+    readInput();
   }
 
   uint8_t divisor = 1; // If 8 bands, we need to divide things by 2

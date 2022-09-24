@@ -1,8 +1,8 @@
-int _speed = 4;   // 1-8
 int _density = 5; // 1-8
 
 uint8_t getBrightness(uint32_t ms, uint8_t salt) {
-  uint16_t ticks = ms >> (8 - _speed);
+  uint8_t speed = map(setting, 0, NUM_SETTINGS - 1, 3, 7);
+  uint16_t ticks = ms >> (8 - speed);
   uint8_t fastcycle8 = ticks;
   uint16_t slowcycle16 = (ticks >> 8) + salt;
   slowcycle16 += sin8(slowcycle16);

@@ -51,7 +51,6 @@
 #define EEPROM_GAIN 1
 #define EEPROM_SQUELCH 2
 #define EEPROM_PATTERN 3
-#define EEPROM_DISPLAY_TIME 4
 
 #define LEFT_KNOB_PIN 13
 #define MIDDLE_KNOB_PIN 33
@@ -62,13 +61,12 @@
 #define DEFAULT_GAIN 30
 #define DEFAULT_SQUELCH 9
 
-#define PATTERN_SOUND 0
-#define PATTERN_TWINKLE 1
-#define PATTERN_PRIDE 2
-#define PATTERN_HEARTBEAT 3
-#define PATTERN_SOLID 4
-#define PATTERN_ATOM 5
-#define NUM_PATTERNS 6
+#define PATTERN_SOLID 0
+#define PATTERN_HEARTBEAT 1
+#define PATTERN_ATOM 2
+#define PATTERN_TWINKLE 3
+#define PATTERN_SOUND 4
+#define NUM_PATTERNS 5
 #define NUM_SETTINGS 5
 #define NUM_PALETTES 6
 
@@ -86,8 +84,13 @@ int buttonHold = 0;
 int calibrateMode = 0;
 Timer buttonHoldTimer = {2000};
 
-CRGB knobColors[] = {CRGB::Maroon, CRGB::Orchid, CRGB::Turquoise, CRGB::White,
-                     CRGB::FairyLight};
+CRGB knobColors[] = {
+  CRGB::Maroon,    // 800000
+  CRGB::Orchid,    // DA70D6
+  CRGB::Turquoise, // 40E0D0
+  CRGB::White,     // FFFFFF
+  CRGB::FairyLight // FFE42D
+};
 CRGB knobColor = knobColors[0];
 
 CRGB leds[NUM_LEDS];
@@ -127,14 +130,15 @@ void setup() {
     EEPROM.write(EEPROM_GAIN, 0);
     EEPROM.write(EEPROM_SQUELCH, 0);
     EEPROM.write(EEPROM_PATTERN, 0);
-    EEPROM.write(EEPROM_DISPLAY_TIME, 10);
     EEPROM.commit();
   }
 
-  brightness = DEFAULT_BRIGHTNESS;
-  gain = DEFAULT_GAIN;
-  squelch = DEFAULT_SQUELCH;
-  pattern = PATTERN_HEARTBEAT;
+  // Read saved values from EEPROM
+  FastLED.setBrightness(EEPROM.read(EEPROM_BRIGHTNESS));
+  brightness = FastLED.getBrightness();
+  gain = EEPROM.read(EEPROM_GAIN);
+  squelch = EEPROM.read(EEPROM_SQUELCH);
+  pattern = EEPROM.read(EEPROM_PATTERN);
 
   pinMode(BUTTON_PIN, INPUT);
 }
@@ -146,14 +150,14 @@ void loop() {
 
   if (pattern == PATTERN_HEARTBEAT) {
     fadeToBlackBy(leds, STRAND_LENGTH, 50);
-    //FastLED.clear();
+    // FastLED.clear();
   } else {
     FastLED.clear();
   }
 
   // Read button and potentiometers
   EVERY_N_MILLISECONDS(10) { readInput(); }
-  //printInputValues();
+  // printInputValues();
 
   uint8_t divisor = 1; // If 8 bands, we need to divide things by 2
   if (numBands == 8)
@@ -194,7 +198,6 @@ void loop() {
     EEPROM.write(EEPROM_GAIN, gain);
     EEPROM.write(EEPROM_SQUELCH, squelch);
     EEPROM.write(EEPROM_PATTERN, pattern);
-    EEPROM.write(EEPROM_DISPLAY_TIME, displayTime);
     EEPROM.commit();
   }
 
@@ -205,14 +208,11 @@ void loop() {
 
 void drawPatterns() {
   switch (pattern) {
-  case PATTERN_SOUND:
-    soundReactive();
-    break;
-  case PATTERN_TWINKLE:
-    twinkle();
-    break;
-  case PATTERN_PRIDE:
-    pride();
+  default:
+  case PATTERN_SOLID:
+    for (uint16_t i = 0; i < STRAND_LENGTH; i++) {
+      leds[i] = knobColor;
+    }
     break;
   case PATTERN_HEARTBEAT:
     heartbeat();
@@ -220,12 +220,11 @@ void drawPatterns() {
   case PATTERN_ATOM:
     atom();
     break;
-  case PATTERN_SOLID:
-    for (uint16_t i = 0; i < STRAND_LENGTH; i++) {
-      leds[i] = knobColor;
-    }
+  case PATTERN_TWINKLE:
+    twinkle();
     break;
-  default:
+  case PATTERN_SOUND:
+    soundReactive();
     break;
   }
 }

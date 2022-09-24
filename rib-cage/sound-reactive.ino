@@ -1,22 +1,41 @@
 void soundReactive() {
   switch (setting) {
   default:
-  case 0:
-    barHeightToBrightness();
-    break;
-  case 1:
-    barHeightSumToStrand();
-    break;
-  case 2:
-    barHeightToMirrorRing();
-    break;
-  case 3:
+  case 0: // "Spin"
     barHeightToSpeed();
     break;
-  case 4:
+  case 1: // "Brightness"
+    barHeightToBrightness();
+    break;
+  case 2: // "Circumference"
+    barHeightToMirrorRing();
+    break;
+  case 3: // "Quantity"
+    barHeightSumToStrand();
+    break;
+  case 4: // "Radius"
     barHeightToRadius();
     break;
   }
+}
+
+void barHeightToSpeed() {
+  // Nucleus
+  int sumNucleus = mapBarsTo(0, 1, 255);
+  for (int i = 1; i < 25; i++) {
+    leds[i] = ColorFromPalette(currentPalette, 0).nscale8(sumNucleus);
+  }
+
+  // Rings
+  int sumInnerRing = mapBarsTo(2, 3, 4);
+  int sumMiddleRing = mapBarsTo(4, 5, 4);
+  int sumOuterRing = mapBarsTo(6, 7, 4);
+
+  innerRing.setSpeed(maxf(0.1, sumInnerRing));
+  middleRing.setSpeed(maxf(0.1, sumMiddleRing));
+  outerRing.setSpeed(maxf(0.1, sumOuterRing));
+
+  atomSpin();
 }
 
 void barHeightToBrightness() {
@@ -36,32 +55,6 @@ void barHeightToBrightness() {
     innerRing.setLED(i, innerRing.getColor(sumInnerRing));
     middleRing.setLED(i, middleRing.getColor(sumMiddleRing));
     outerRing.setLED(i, outerRing.getColor(sumOuterRing));
-  }
-}
-
-void barHeightSumToStrand() {
-  int numStrands = 4;
-  int offset = 2;
-
-  int sum = 0;
-  for (int band = 0; band < numBands; band++) {
-    uint8_t barHeight = barHeights[band];
-    sum += barHeight;
-  }
-
-  // height gets mapped to full STRAND_LENGTH of 100 instead of 25 (length of
-  // each substrand) as a way of *4 amplifying the mic "sensitivity". I also did
-  // this manually with `* 2` on my bike
-  int height = map(sum, 0, NUM_LEDS, 0, STRAND_LENGTH);
-  for (int s = 0; s < numStrands; s++) {
-    for (int x = 0; x < height; x++) {
-      int index = x + (s * 25) + offset;
-      if (index < STRAND_LENGTH) {
-        int brightness = map(x, 0, STRAND_LENGTH, 0, 255);
-        CRGB color = ColorFromPalette(currentPalette, brightness);
-        leds[index] = color.nscale8(255 - brightness);
-      }
-    }
   }
 }
 
@@ -91,23 +84,30 @@ void barHeightToMirrorRing() {
   }
 }
 
-void barHeightToSpeed() {
-  // Nucleus
-  int sumNucleus = mapBarsTo(0, 1, 255);
-  for (int i = 1; i < 25; i++) {
-    leds[i] = ColorFromPalette(currentPalette, 0).nscale8(sumNucleus);
+void barHeightSumToStrand() {
+  int numStrands = 4;
+  int offset = 2;
+
+  int sum = 0;
+  for (int band = 0; band < numBands; band++) {
+    uint8_t barHeight = barHeights[band];
+    sum += barHeight;
   }
 
-  // Rings
-  int sumInnerRing = mapBarsTo(2, 3, 4);
-  int sumMiddleRing = mapBarsTo(4, 5, 4);
-  int sumOuterRing = mapBarsTo(6, 7, 4);
-
-  innerRing.setSpeed(maxf(0.1, sumInnerRing));
-  middleRing.setSpeed(maxf(0.1, sumMiddleRing));
-  outerRing.setSpeed(maxf(0.1, sumOuterRing));
-
-  atomSpin();
+  // height gets mapped to full STRAND_LENGTH of 100 instead of 25 (length of
+  // each substrand) as a way of *4 amplifying the mic "sensitivity". I also did
+  // this manually with `* 2` on my bike
+  int height = map(sum, 0, NUM_LEDS, 0, STRAND_LENGTH);
+  for (int s = 0; s < numStrands; s++) {
+    for (int x = 0; x < height; x++) {
+      int index = x + (s * 25) + offset;
+      if (index < STRAND_LENGTH) {
+        int brightness = map(x, 0, STRAND_LENGTH, 0, 255);
+        CRGB color = ColorFromPalette(currentPalette, brightness);
+        leds[index] = color.nscale8(255 - brightness);
+      }
+    }
+  }
 }
 
 void barHeightToRadius() {

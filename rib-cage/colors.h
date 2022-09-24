@@ -1,16 +1,16 @@
 #define SECONDS_PER_PALETTE 10
 
-DEFINE_GRADIENT_PALETTE(_redRoseOrchid){0,   128, 0,   0,    // CRGB::Maroon
+DEFINE_GRADIENT_PALETTE(_floralPalette){0,   128, 0,   0,    // CRGB::Maroon
                                         85,  210, 105, 30,   // CRGB::Chocolate
                                         170, 255, 127, 80,   // CRGB::Coral
                                         255, 218, 112, 214}; // CRGB::Orchid
-CRGBPalette16 redRoseOrchid = _redRoseOrchid;
+CRGBPalette16 floralPalette = _floralPalette;
 
-DEFINE_GRADIENT_PALETTE(_tealGreenGold){0,   34,  139, 34, // CRGB::ForestGreen
+DEFINE_GRADIENT_PALETTE(_citrusPalette){0,   34,  139, 34, // CRGB::ForestGreen
                                         85,  0,   255, 0,  // CRGB::Lime
                                         170, 255, 215, 0,  // CRGB::Gold
                                         255, 255, 140, 0}; // CRGB::DarkOrange
-CRGBPalette16 tealGreenGold = _tealGreenGold;
+CRGBPalette16 citrusPalette = _citrusPalette;
 
 DEFINE_GRADIENT_PALETTE(_firePalette){0,   255, 0,   0,  // CRGB::Red
                                       200, 255, 69,  0,  // CRGB::OrangeRed
@@ -31,11 +31,11 @@ CRGBPalette16 fairyPalette = _fairyPalette;
 
 // clang-format off
 CRGBPalette16* activePalettes[] = {
-  &redRoseOrchid,
-  &tealGreenGold,
+  &floralPalette,
+  &citrusPalette,
   &firePalette,
-  &fairyPalette,
-  &icePalette
+  &icePalette,
+  &fairyPalette
 };
 // clang-format on
 
